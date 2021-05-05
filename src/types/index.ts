@@ -1,4 +1,9 @@
 export interface Axios {
+  interceptors: {
+    request: InterceptorManager<AxiosRequestConfig>
+    response: InterceptorManager<AxiosResponse>
+  }
+
   request<T = any>(config: AxiosRequestConfig): AxiosPromise<T>
   get<T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
   head<T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
@@ -62,4 +67,30 @@ export interface AxiosError extends Error {
   code?: string | null | number
   request?: XMLHttpRequest
   response?: AxiosResponse
+}
+
+// As Request interceptor and response interceptor is quit different,
+// we need to define generic interface for the feature.
+export interface InterceptorManager<T /* = AxiosRequestConfig | AxiosResponse */> {
+  /**
+   * Add an interceptor and return its id.
+   * @param resolved
+   * @param rejected
+   * @returns the interceptor id.
+   */
+  use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number
+
+  /**
+   * Remove an interceptor by its id.
+   * @param id the interceptor id
+   */
+  eject(id: number): void
+}
+
+export interface ResolvedFn<T = any> {
+  (val: T): T | Promise<T>
+}
+
+export interface RejectedFn {
+  (error: any): any
 }
