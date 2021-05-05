@@ -10,13 +10,13 @@ export default function xhr(config: AxiosRequestConfig): AxiosPromise {
   return new Promise((resolve, reject) => {
     const { data = null, url, method = 'GET', headers, responseType, timeout } = config
     const request = new XMLHttpRequest()
-    request.open(method.toUpperCase(), url as string, true)
+    request.open(method.toUpperCase(), url!, true)
     if (timeout) request.timeout = timeout
 
     if (headers) {
       Object.keys(headers).forEach(name => {
         const headerValue: string = headers[name]
-        if (data === null && headerValue.toUpperCase() === 'CONTENT-TYPE') {
+        if (data === null && headerValue.toLowerCase() === 'content-type') {
           delete headers[name]
         }
         request.setRequestHeader(name, headerValue)
@@ -56,7 +56,7 @@ export default function xhr(config: AxiosRequestConfig): AxiosPromise {
 
     // Network error
     request.onerror = function() {
-      reject(createError('Network error', config, request, null))
+      reject(createError('ECONNABORTED', config, request, null))
     }
 
     // timeout

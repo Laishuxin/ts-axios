@@ -1,5 +1,5 @@
 import { Header } from '../types'
-import { isObject } from './utils'
+import { isPlainObject } from './utils'
 
 /**
  * Process http headers.
@@ -10,7 +10,7 @@ import { isObject } from './utils'
  */
 export function processHeaders(headers: Header, data: any) {
   normalizedName(headers, 'Content-Type')
-  if (isObject(data)) {
+  if (isPlainObject(data)) {
     if (headers && !headers['Content-Type']) {
       headers['Content-Type'] = 'application/json;charset=utf-8'
     }

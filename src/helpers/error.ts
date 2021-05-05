@@ -5,6 +5,7 @@ export class AxiosError extends Error implements AError {
   code?: string | number | null | undefined
   request?: XMLHttpRequest | undefined
   response?: AxiosResponse | undefined
+  isAxiosError: boolean
 
   constructor(
     message: string,
@@ -18,6 +19,7 @@ export class AxiosError extends Error implements AError {
     this.request = request
     this.response = response
     this.code = code
+    this.isAxiosError = true
     Object.setPrototypeOf(this, AxiosError.prototype)
   }
 }

@@ -1,14 +1,15 @@
-import dispatchRequest from './index'
-import {
-  Axios as AxiosInterface,
-  AxiosInstance,
-  AxiosPromise,
-  AxiosRequestConfig,
-  Method
-} from '../types'
+import dispatchRequest from './dispatchRequest'
+import { AxiosPromise, AxiosRequestConfig, Method } from '../types'
 
-export class Axios implements AxiosInterface {
-  request(config: AxiosRequestConfig): AxiosPromise {
+export class Axios {
+  // generic support
+  request(url: string | AxiosRequestConfig, config?: AxiosRequestConfig): AxiosPromise {
+    if (typeof url === 'string') {
+      config = config || {}
+      config.url = url
+    } else {
+      config = url
+    }
     return dispatchRequest(config)
   }
   get(url: string, config?: AxiosRequestConfig): AxiosPromise {
@@ -53,14 +54,4 @@ export class Axios implements AxiosInterface {
   }
 }
 
-function getAxios(): AxiosInstance {
-  const context = new Axios()
-  const axios: AxiosInstance = Axios.prototype.request.bind(context) as any
-
-  axios.get = Axios.prototype.get.bind(context)
-
-  return axios
-}
-
-const axios = getAxios()
-export default axios
+export default Axios

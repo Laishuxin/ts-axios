@@ -5,23 +5,20 @@ import { buildURL } from '../helpers/url'
 import { AxiosRequestConfig } from '../types'
 import xhr from './xhr'
 
-function axios(config: AxiosRequestConfig): AxiosPromise {
+function dispatchRequest(config: AxiosRequestConfig): AxiosPromise {
   processConfig(config)
-  return xhr(config).then(
-    (value: AxiosResponse) => transformResponseData(value)
-    // err => err
-  )
+  return xhr(config).then((value: AxiosResponse) => transformResponseData(value))
 }
 
 function processConfig(config: AxiosRequestConfig) {
   config.url = transformUrl(config)
-  config.data = transformRequestData(config)
   config.headers = transformHeaders(config)
+  config.data = transformRequestData(config)
 }
 
 function transformUrl(config: AxiosRequestConfig): string {
   const { url, params } = config
-  return buildURL(url as string, params)
+  return buildURL(url!, params)
 }
 
 function transformRequestData(config: AxiosRequestConfig): any {
@@ -39,4 +36,4 @@ function transformResponseData(res: AxiosResponse): AxiosResponse {
   return res
 }
 
-export default axios
+export default dispatchRequest
