@@ -1,4 +1,6 @@
 export interface Axios {
+  defaults: AxiosRequestConfig
+
   interceptors: {
     request: InterceptorManager<AxiosRequestConfig>
     response: InterceptorManager<AxiosResponse>
@@ -21,30 +23,49 @@ export interface AxiosInstance extends Axios {
   <T = any>(url: string, config?: AxiosRequestConfig): AxiosPromise<T>
 }
 
+export interface AxiosStatic extends AxiosInstance {
+  create(config?: AxiosRequestConfig): AxiosInstance
+  CancelToken: CancelTokenStatic
+  isCancel(val: any): boolean
+  Cancel: CancelStatic
+}
+
+export interface AxiosTransformer {
+  /**
+   * Transform and return transformed data.
+   */
+  (data: any, headers?: any): any
+}
+
 export interface AxiosRequestConfig {
   url?: string
   method?: Method
   data?: any
   params?: any
-  headers?: Header
+  headers?: any
   responseType?: XMLHttpRequestResponseType
   timeout?: number
+  withCredentials?: boolean
+  xsrfCookieName?: string
+  xsrfHeaderName?: string
+
+  transformRequest?: AxiosTransformer | AxiosTransformer[]
+  transformResponse?: AxiosTransformer | AxiosTransformer[]
+  cancelToken?: CancelToken
+
+  [index: string]: any
 }
 
 export interface AxiosResponse<T = any> {
   data: T
   status: number
-  headers: Header
+  headers: any
   statusText: string
   config: AxiosRequestConfig
   request: any
 }
 
 export interface AxiosPromise<T = any> extends Promise<AxiosResponse<T>> {}
-
-export interface Header {
-  [name: string]: string
-}
 
 export type Method =
   | 'get'
@@ -93,4 +114,37 @@ export interface ResolvedFn<T = any> {
 
 export interface RejectedFn {
   (error: any): any
+}
+
+export interface CancelToken {
+  promise: Promise<Cancel>
+  reason?: Cancel
+
+  throwIfRequested(): void
+}
+
+export interface CancelExecutor {
+  (cancel: Canceler): void
+}
+
+export interface Canceler {
+  (message: string): void
+}
+
+export interface CancelTokenSource {
+  token: CancelToken
+  cancel: Canceler
+}
+
+export interface CancelTokenStatic {
+  new (executor: CancelExecutor): CancelToken
+  source(): CancelTokenSource
+}
+
+export interface Cancel {
+  message: string
+}
+
+export interface CancelStatic {
+  new (message: string): Cancel
 }

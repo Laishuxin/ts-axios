@@ -1,5 +1,5 @@
-import { Header } from '../types'
-import { isPlainObject } from './utils'
+import { Method } from '../types'
+import { deepMerge, isPlainObject } from './utils'
 
 /**
  * Process http headers.
@@ -8,7 +8,7 @@ import { isPlainObject } from './utils'
  * @param data request payload
  * @returns headers
  */
-export function processHeaders(headers: Header, data: any) {
+export function processHeaders(headers: any, data: any) {
   normalizedName(headers, 'Content-Type')
   if (isPlainObject(data)) {
     if (headers && !headers['Content-Type']) {
@@ -18,7 +18,7 @@ export function processHeaders(headers: Header, data: any) {
   return headers
 }
 
-function normalizedName(headers: Header, normalizedName: string) {
+function normalizedName(headers: any, normalizedName: string) {
   if (!headers) return
   Object.keys(headers).forEach(name => {
     if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
@@ -28,7 +28,7 @@ function normalizedName(headers: Header, normalizedName: string) {
   })
 }
 
-export function parseHeader(headers: string): Header {
+export function parseHeader(headers: string): any {
   const res = Object.create(null)
   if (!headers) return res
 
@@ -46,4 +46,36 @@ export function parseHeader(headers: string): Header {
     res[key] = value
   })
   return res
+}
+
+/**
+ * Flattens headers
+ * @param headers Http headers
+ * @param method  Http method
+ * @example
+ * headers: {
+ *  common: {
+ *    Accept: 'application/json, text/plain, *\/*'
+ *  },
+ *  post: {
+ *    'Content-Type':'application/x-www-form-urlencoded'
+ *  }
+ *}
+ * // result:
+ * headers: {
+ * Accept: 'application/json, text/plain, *\/*',
+ *'Content-Type':'application/x-www-form-urlencoded'
+ * }
+ */
+export function flattenHeader(headers: any, method: Method): any {
+  if (!headers) {
+    return headers
+  }
+
+  headers = deepMerge(headers.common || {}, headers[method] || {}, headers)
+  const fieldsToDelete = ['common', 'get', 'head', 'options', 'delete', 'put', 'patch', 'post']
+  fieldsToDelete.forEach(field => {
+    delete headers[field]
+  })
+  return headers
 }

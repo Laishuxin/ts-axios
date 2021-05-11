@@ -5,6 +5,9 @@ const webpackDevMiddleware = require('webpack-dev-middleware')
 const webpackHotMiddleware = require('webpack-hot-middleware')
 const WebpackConfig = require('./webpack.config')
 const router = express.Router()
+const cookieParser = require('cookie-parser')
+
+require('./server2')
 
 const app = express()
 const compiler = webpack(WebpackConfig)
@@ -22,7 +25,15 @@ app.use(webpackHotMiddleware(compiler))
 app.use(express.static(__dirname))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
+app.use(cookieParser())
 app.use(router)
+app.use(
+  express.static(__dirname, {
+    setHeaders(res) {
+      res.cookie('XSRF-TOKEN-D', '1234abc')
+    },
+  })
+)
 
 // testing cases
 router.get('/simple/get', function (req, res) {
@@ -36,7 +47,6 @@ router.get('/base/get', function (req, res) {
 })
 
 router.post('/base/post', function (req, res) {
-  console.log(req.body)
   res.json(req.body)
 })
 
@@ -94,7 +104,32 @@ router.get('/interceptor/get', function (req, res) {
   res.end('hello')
 })
 
-const port = process.env.PORT || 8889
+router.all('/config/post', function (req, res) {
+  res.json({
+    code: 0,
+    message: 'ok',
+    result: {
+      username: 'foo',
+      age: 18,
+    },
+  })
+})
+
+router.get('/cancel/token', function (req, res) {
+  setTimeout(() => {
+    res.json({
+      msg: `hello world`,
+    })
+  }, 3000)
+})
+
+router.get('/more/get', function (req, res) {
+  console.log(req.cookies)
+  res.json(req.cookies)
+})
+
+
+const port = process.env.PORT || 8080
 module.exports = app.listen(port, () => {
   console.log(`Server listening on http://localhost:${port}, Ctrl+C to stop`)
 })
