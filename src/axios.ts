@@ -19,6 +19,18 @@ axios.CancelToken = CancelToken
 axios.isCancel = isCancel
 axios.Cancel = Cancel
 
+axios.all = function all(promises) {
+  return Promise.all(promises)
+}
+
+axios.spread = function spread(callback) {
+  return function(arr) {
+    return callback.apply(null, arr)
+  }
+}
+
+axios.Axios = Axios
+
 axios.create = function(config?: AxiosRequestConfig) {
   return createInstance(mergeConfig(defaultConfig, config))
 }

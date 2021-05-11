@@ -12,6 +12,9 @@ const defaultConfig: AxiosRequestConfig = {
   },
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-XSRF-TOKEN',
+  validateStatus: status => {
+    return status >= 200 && status < 300
+  },
   transformRequest: [
     function(data: any, headers?: any) {
       processHeaders(headers, data)
