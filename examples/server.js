@@ -6,6 +6,8 @@ const webpackHotMiddleware = require('webpack-hot-middleware')
 const WebpackConfig = require('./webpack.config')
 const router = express.Router()
 const cookieParser = require('cookie-parser')
+const multipart = require('connect-multiparty')
+const path = require('path')
 
 require('./server2')
 
@@ -18,6 +20,12 @@ app.use(
       colors: true,
       chunks: false,
     },
+  })
+)
+
+app.use(
+  multipart({
+    uploadDir: path.resolve(__dirname, 'upload-file'),
   })
 )
 
@@ -128,6 +136,10 @@ router.get('/more/get', function (req, res) {
   res.json(req.cookies)
 })
 
+router.post('/more/upload', function (req, res) {
+  console.log(req.body, req.files)
+  res.end('upload success!')
+})
 
 const port = process.env.PORT || 8080
 module.exports = app.listen(port, () => {

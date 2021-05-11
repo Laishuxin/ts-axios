@@ -53,6 +53,10 @@ export function isURLSameOrigin(url: string): boolean {
   )
 }
 
+export function isFormData(data: any): data is FormData {
+  return typeof data !== 'undefined' && data instanceof FormData
+}
+
 const hrefNode = document.createElement('a')
 const currentOrigin = resolveUrl(window.location.href)
 

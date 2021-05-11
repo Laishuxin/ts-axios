@@ -127,7 +127,12 @@
     "webpack-hot-middleware": "^2.24.3"
   },
   "dependencies": {
+    "@types/nprogress": "^0.2.0",
+    "connect-multiparty": "^2.2.0",
     "cookie-parser": "^1.4.5",
-    "qs": "^6.10.1"
+    "css-loader": "2.1",
+    "nprogress": "^0.2.0",
+    "qs": "^6.10.1",
+    "style-loader": "0.23"
   }
 }

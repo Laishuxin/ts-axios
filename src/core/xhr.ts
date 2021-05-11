@@ -1,7 +1,7 @@
 import { AxiosRequestConfig, AxiosPromise, AxiosResponse } from '../types/index'
-import { parseHeader } from '../helpers/header'
+import { parseHeader, processHeaders } from '../helpers/header'
 import { createError } from '../helpers/error'
-import { isURLSameOrigin } from '../helpers/utils'
+import { isFormData, isURLSameOrigin } from '../helpers/utils'
 import cookie from '../helpers/cookie'
 
 /**
@@ -20,62 +20,103 @@ export default function xhr(config: AxiosRequestConfig): AxiosPromise {
       cancelToken,
       withCredentials,
       xsrfCookieName,
-      xsrfHeaderName
+      xsrfHeaderName,
+      onDownloadProgress,
+      onUploadProgress
     } = config
     const request = new XMLHttpRequest()
     request.open(method.toUpperCase(), url!, true)
-    if (timeout) request.timeout = timeout
-
-    if (headers) {
-      Object.keys(headers).forEach(name => {
-        const headerValue: string = headers[name]
-        if (data === null && headerValue.toLowerCase() === 'content-type') {
-          delete headers[name]
-        }
-        request.setRequestHeader(name, headerValue)
-      })
-    }
-
-    // set xsrf token
-    debugger
-    if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName) {
-      const xsrfValue = cookie.read(xsrfCookieName)
-      if (xsrfValue && xsrfHeaderName) {
-        request.setRequestHeader(xsrfHeaderName, xsrfValue)
-      }
-    }
-
-    if (withCredentials) {
-      request.withCredentials = withCredentials
-    }
-
+    configureRequest()
+    addEvents()
+    processHeaders()
+    processCancel()
     request.send(data)
 
-    if (cancelToken) {
-      cancelToken.promise.then(reason => {
-        request.abort()
-        reject(reason)
-      })
+    function configureRequest() {
+      if (responseType) {
+        request.responseType = responseType
+      }
+      if (timeout) request.timeout = timeout
+
+      if (withCredentials) {
+        request.withCredentials = withCredentials
+      }
+    }
+    function addEvents() {
+      request.onreadystatechange = function() {
+        if (request.readyState !== 4) {
+          return
+        }
+        const status = request.status
+
+        const headers = request.getAllResponseHeaders()
+        const data =
+          responseType && responseType !== 'text' ? request.response : request.responseText
+
+        const response: AxiosResponse = {
+          headers: parseHeader(headers),
+          data,
+          status,
+          statusText: request.statusText,
+          request,
+          config
+        }
+
+        handleResponse(response)
+      }
+
+      if (onUploadProgress) {
+        request.upload.onprogress = onUploadProgress
+      }
+      if (onDownloadProgress) {
+        request.onprogress = onDownloadProgress
+      }
+
+      // Network error
+      request.onerror = function() {
+        reject(createError('ECONNABORTED', config, request, null))
+      }
+
+      // timeout
+      request.ontimeout = function() {
+        reject(createError(`Timeout of ${timeout} ms exceeded`, config, request, 'TIMEOUT'))
+      }
+    }
+    function processHeaders() {
+      // set xsrf token
+      if ((withCredentials || isURLSameOrigin(url!)) && xsrfCookieName) {
+        const xsrfValue = cookie.read(xsrfCookieName)
+        if (xsrfValue && xsrfHeaderName) {
+          request.setRequestHeader(xsrfHeaderName, xsrfValue)
+        }
+      }
+
+      if (headers) {
+        Object.keys(headers).forEach(name => {
+          const headerValue: string = headers[name]
+          if (data === null && headerValue.toLowerCase() === 'content-type') {
+            delete headers[name]
+          }
+          request.setRequestHeader(name, headerValue)
+        })
+      }
+
+      if (isFormData(data)) {
+        delete headers['Content-Type']
+      }
     }
 
-    request.onreadystatechange = function() {
-      if (request.readyState !== 4) {
-        return
+    function processCancel() {
+      if (cancelToken) {
+        cancelToken.promise.then(reason => {
+          request.abort()
+          reject(reason)
+        })
       }
-      const status = request.status
+    }
 
-      const headers = request.getAllResponseHeaders()
-      const data = responseType && responseType !== 'text' ? request.response : request.responseText
-
-      const response: AxiosResponse = {
-        headers: parseHeader(headers),
-        data,
-        status,
-        statusText: request.statusText,
-        request,
-        config
-      }
-
+    function handleResponse(response: AxiosResponse) {
+      const status = response.status
       if (status === 0) {
         return
       } else if (status >= 200 && status < 300) {
@@ -85,16 +126,6 @@ export default function xhr(config: AxiosRequestConfig): AxiosPromise {
           createError(`Request failed with status code ${status}`, config, request, null, response)
         )
       }
-    }
-
-    // Network error
-    request.onerror = function() {
-      reject(createError('ECONNABORTED', config, request, null))
-    }
-
-    // timeout
-    request.ontimeout = function() {
-      reject(createError(`Timeout of ${timeout} ms exceeded`, config, request, 'TIMEOUT'))
     }
   })
 }
