@@ -68,6 +68,7 @@ interface Strategy {
 interface StrategyMap {
   [index: string]: Strategy
 }
+
 const strats: StrategyMap = Object.create(null)
 
 function defaultStrat(val1: any, val2: any): any {
